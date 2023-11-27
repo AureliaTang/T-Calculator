@@ -3,9 +3,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-right: 20%;
 }
 
-.share {
+.center {
+  /* display: flex;
+  justify-content: center;
+  align-items: center;  */
+  margin: auto;
+}
+
+.center {
   margin-left: 10%;
 }
