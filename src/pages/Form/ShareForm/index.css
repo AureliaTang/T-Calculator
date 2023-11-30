@@ -3,9 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-right: 20%;
+  margin-right: 50%;
 }
 
-.share {
-  margin-left: 10%;
-}
+.share {}

@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
 import ShareForm from './ShareForm'
+import RateForm from './RateForm'
+
 
 const Home = () => {
   return(
-    <ShareForm />
+    <div className="home">
+      <ShareForm />
+      <RateForm />
+    </div>
+
+
   )
 }
 
