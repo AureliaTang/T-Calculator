@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Button, Form, Input, Table, InputNumber, Space, Flex } from 'antd';
 import { useSelector } from 'react-redux';
+import './index.css';
 import userReducer, { initialState } from '../../../reducers/userReducer';
 
 const EditableContext = React.createContext(null);
@@ -265,8 +266,7 @@ const App = () => {
   });
 
   return (
-    <div>
-      <div>111{JSON.stringify(userData, null, 2)}222</div>
+    <div className='home-page'>
       <Flex justify="space-between" align="center">
         <Button
           onClick={handleAdd}
