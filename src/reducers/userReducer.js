@@ -8,7 +8,7 @@ const userReducer = (state = initialState, action) => {
     case UPDATE_USER:
       console.log(state, action);
       return {
-        ...state,
+        // ...state,
         ...action.payload,
       };
     default:

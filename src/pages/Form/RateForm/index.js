@@ -31,7 +31,9 @@ const EditableCell = ({
       inputRef.current.focus();
     }
   }, [editing]);
-
+  // useEffect(() => {
+  //   // Implement logic here if needed
+  // }, [acRate]);
   const toggleEdit = () => {
     setEditing(!editing);
     form.setFieldsValue({
@@ -84,40 +86,74 @@ const EditableCell = ({
 
 const App = () => {
   const userData = useSelector((state) => state.user);
+  const [modifiedFirstRow, setModifiedFirstRow] = useState(false)
   const [eleRate, setEleRate] = useState(1)
   const [salesRate, setSalesRate] = useState(1)
   const [acRate, setAcRate] = useState(1)
   const [hourRate, setHourRate] = useState(1)
 
-
-  // console.log("*********")
-  // console.log(userData)
-  // const [avghour, setHourRate] = useState(1)
-
+  const keys = Object.keys(userData["0"] || {});
+  // Create dynamic columns
+  const dynCol = keys.map((key) => ({
+    title: String(key),
+    dataIndex: String(key),
+    editable: true,
+  }));
 
   const onChange = (value) => {
-    setAcRate(value*0.01)
+    if (value !== acRate * 0.01) {
+      setAcRate(value * 0.01);
+    }
     console.log('changed', value);
   };
 
   const [dataSource, setDataSource] = useState([
     {
       key: '0',
-      electricitycost: .25,
-      saleprice: .6,
-      profit: .35,
-      acchargepower: 60,
-      averageworkhour: 2,
-      totalchargekwh: 120,
-      year: 15330,
-      // operation: 2,
+      electricitycost: 0,
+      saleprice: 0,
+      profit: 0,
+      acchargepower: 0,
+      averageworkhour: 0,
+      totalchargekwh: 0,
+      year: 0,
     },
   ]);
   const [count, setCount] = useState(2);
+
+  const implementFirstRow = (originalData) => {
+    const profit = originalData.saleprice - originalData.electricitycost;
+    const totalchargekwh = originalData.acchargepower * originalData.averageworkhour;
+    const year = profit * totalchargekwh * 365;
+    const userDataKeys = keys
+
+    return {
+      ...originalData,
+      profit: profit.toFixed(2),
+      totalchargekwh: totalchargekwh.toFixed(2),
+      year: year.toFixed(2),
+      ...userDataKeys.reduce((acc, key) => {
+        acc[key] = (userData["0"][key] * year).toFixed(2);
+        return acc;
+      }, {}),
+    };
+  }
+
+  if(dataSource.length === 1 && !modifiedFirstRow) {
+    if(dataSource[0].saleprice !==0 
+      && dataSource[0].electricitycost !==0
+      && dataSource[0].acchargepower !==0
+      && dataSource[0].averageworkhour !==0) {
+        setModifiedFirstRow(true)
+        setDataSource([implementFirstRow(dataSource[0])])
+    }
+  }
+
   const handleDelete = (key) => {
     const newData = dataSource.filter((item) => item.key !== key);
     setDataSource(newData);
   };
+
   const defaultColumns = [
     {
       title: 'electricity cost',
@@ -161,24 +197,17 @@ const App = () => {
       dataIndex: 'year',
       editable: true,
     },
-    // {
-    //   title: 'operation',
-    //   dataIndex: 'operation',
-    //   render: (_, record) =>
-    //     dataSource.length >= 1 ? (
-    //       <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.key)}>
-    //         <a>Delete</a>
-    //       </Popconfirm>
-    //     ) : null,
-    // },
-  ];
+  ].concat(dynCol);
+
+  if(userData.length >=1) {
+    console.log(Object.keys(userData["0"]))
+  }
+
   const handleAdd = () => {
     const latestData = dataSource[dataSource.length - 1];
-
     const profit = latestData.saleprice - latestData.electricitycost;
     const year = profit * latestData.totalchargekwh * 365;
     const tpower = year * 1;
-    
     const newData = {
       key: count,
       electricitycost: latestData.electricitycost * eleRate.toFixed(2),
@@ -189,6 +218,10 @@ const App = () => {
       totalchargekwh: latestData.acchargepower * acRate * latestData.averageworkhour, // Update this line
       year: year.toFixed(2),
       tpower: tpower.toFixed(2),
+      ...keys.reduce((acc, key) => {
+        acc[key] = (userData["0"][key] * year).toFixed(2);
+        return acc;
+      }, {}),
     };
     setDataSource([...dataSource, newData]);
     setCount(count + 1);
@@ -230,10 +263,6 @@ const App = () => {
       }),
     };
   });
-
-  // useEffect(() => {
-  //   console.log(userData)
-  // }, [userData]);
 
   return (
     <div>

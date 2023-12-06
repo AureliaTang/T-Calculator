@@ -16,7 +16,9 @@ export const increment = (amount) => {
 export const counterSlice = createSlice({
   name: 'counter',
   initialState: {
-    providers: {}
+    providers: {
+      // "0": {}
+    }
   },
   reducers: {
     setProviders: (state, action) => {
