@@ -39,28 +39,29 @@ const ShareForm = () => {
 
     const denominator = parseInt(values.evAmount) 
                       + parseInt(values.installAmount) 
-                      + parseInt(values.operatorAmount) 
-                      + parseInt(values.carAmount)
+                      + parseInt(values.operatorAmount*values.contractYear) 
+                      + parseInt(values.carAmount*values.contractYear)
 
     shareMap[0] = [values.evProvider, values.evAmount/denominator]
     shareMap[1] = [values.installProvider, values.installAmount/denominator]
-    shareMap[2] = [values.operatorProvider, values.operatorAmount/denominator]
-    shareMap[3] = [values.carProvider, values.carAmount/denominator]
+    shareMap[2] = [values.operatorProvider, values.operatorAmount*values.contractYear/denominator]
+    shareMap[3] = [values.carProvider, values.carAmount*values.contractYear/denominator]
 
     const sumMap = {}
 
     for (let [key, value] of shareMap) {
       if(sumMap.hasOwnProperty(key)) {
-        sumMap[key] = sumMap[key] + Math.round(value * 100) / 100
+        sumMap[key] = sumMap[key] + value * 100/ 100
       } else{
-        sumMap[key] = Math.round(value * 100) / 100
+        if(key === 'operatorAmount') {
+          console.log(key)
+        }
+        sumMap[key] = value * 100 / 100
       }
     }
     setDataSource([sumMap])
     dispatch(updateUser([sumMap]))
     dispatch(updateUser([sumMap]))
-   
-    // setProviders, increment
   } 
 
 
