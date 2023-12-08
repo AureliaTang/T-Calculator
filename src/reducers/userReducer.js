@@ -11,6 +11,13 @@ const userReducer = (state = initialState, action) => {
         // ...state,
         ...action.payload,
       };
+      // case UPDATE_GRAPH:
+      //   console.log("graph----------");
+      //   console.log(state, action);
+      //   return {
+      //     // ...state,
+      //     ...action.payload,
+      //   };
     default:
       return state;
   }

@@ -1,8 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Button, Form, Input, Table, InputNumber, Space, Flex } from 'antd';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import './index.css';
 import userReducer, { initialState } from '../../../reducers/userReducer';
+// import { updateGraph } from '../../../actions';
+import { LineChart } from '@mui/x-charts/LineChart';
 
 const EditableContext = React.createContext(null);
 const EditableRow = ({ index, ...props }) => {
@@ -22,19 +24,20 @@ const EditableCell = ({
   dataIndex,
   record,
   handleSave,
+  // dataSource,
   ...restProps
 }) => {
+  // const dispatch = useDispatch()
   const [editing, setEditing] = useState(false);
   const inputRef = useRef(null);
   const form = useContext(EditableContext);
   useEffect(() => {
     if (editing) {
       inputRef.current.focus();
+      // dispatch(updateGraph(dataSource));
     }
   }, [editing]);
-  // useEffect(() => {
-  //   // Implement logic here if needed
-  // }, [acRate]);
+
   const toggleEdit = () => {
     setEditing(!editing);
     form.setFieldsValue({
@@ -92,6 +95,8 @@ const App = () => {
   const [salesRate, setSalesRate] = useState(1)
   const [acRate, setAcRate] = useState(1)
   const [hourRate, setHourRate] = useState(1)
+  const dispatch = useDispatch();  // Define dispatch here
+
 
   const keys = Object.keys(userData["0"] || {});
   // Create dynamic columns
@@ -100,60 +105,6 @@ const App = () => {
     dataIndex: String(key),
     editable: true,
   }));
-
-  const onChange = (value) => {
-    if (value !== acRate * 0.01) {
-      setAcRate(value * 0.01);
-    }
-    console.log('changed', value);
-  };
-
-  const [dataSource, setDataSource] = useState([
-    {
-      key: '0',
-      electricitycost: 0,
-      saleprice: 0,
-      profit: 0,
-      acchargepower: 0,
-      averageworkhour: 0,
-      totalchargekwh: 0,
-      year: 0,
-    },
-  ]);
-  const [count, setCount] = useState(2);
-
-  const implementFirstRow = (originalData) => {
-    const profit = originalData.saleprice - originalData.electricitycost;
-    const totalchargekwh = originalData.acchargepower * originalData.averageworkhour;
-    const year = profit * totalchargekwh * 365;
-    const userDataKeys = keys
-
-    return {
-      ...originalData,
-      profit: profit.toFixed(2),
-      totalchargekwh: totalchargekwh.toFixed(2),
-      year: year.toFixed(2),
-      ...userDataKeys.reduce((acc, key) => {
-        acc[key] = (userData["0"][key] * year).toFixed(2);
-        return acc;
-      }, {}),
-    };
-  }
-
-  if(dataSource.length === 1 && !modifiedFirstRow) {
-    if(dataSource[0].saleprice !==0 
-      && dataSource[0].electricitycost !==0
-      && dataSource[0].acchargepower !==0
-      && dataSource[0].averageworkhour !==0) {
-        setModifiedFirstRow(true)
-        setDataSource([implementFirstRow(dataSource[0])])
-    }
-  }
-
-  const handleDelete = (key) => {
-    const newData = dataSource.filter((item) => item.key !== key);
-    setDataSource(newData);
-  };
 
   const defaultColumns = [
     {
@@ -189,20 +140,61 @@ const App = () => {
       editable: true,
     },
     {
-      title: 'averageworkhour',
-      dataIndex: 'averageworkhour',
-      editable: true,
-    },
-    {
       title: 'profit/year',
       dataIndex: 'year',
       editable: true,
     },
   ].concat(dynCol);
 
-  if(userData.length >=1) {
-    console.log(Object.keys(userData["0"]))
+  const firstRowData = defaultColumns.reduce((acc, current) => {
+    acc[current.dataIndex] = 0;
+    return acc;
+  }, {});
+
+  const [dataSource, setDataSource] = useState([firstRowData]);
+  const [count, setCount] = useState(2);
+
+  const implementFirstRow = (originalData) => {
+    const profit = originalData.saleprice - originalData.electricitycost;
+    const totalchargekwh = (originalData.acchargepower) * (originalData.averageworkhour);
+    const year = profit * totalchargekwh * 365;
+    const userDataKeys = keys
+
+    return {
+      ...originalData,
+      profit: profit,
+      totalchargekwh: totalchargekwh,
+      year: year,
+      ...userDataKeys.reduce((acc, key) => {
+        acc[key] = (userData["0"][key] * year);
+        return acc;
+      }, {}),
+    };
   }
+
+  if(dataSource.length === 1 && !modifiedFirstRow) {
+    const isComplete = dataSource[0].saleprice !==0 
+    && dataSource[0].electricitycost !==0
+    && dataSource[0].acchargepower !==0
+    && dataSource[0].averageworkhour !==0
+
+    if (isComplete) {   
+      setDataSource([implementFirstRow(dataSource[0])])
+      setModifiedFirstRow(true)
+      }
+  }
+
+  const handleDelete = (key) => {
+    const newData = dataSource.filter((item) => item.key !== key);
+    setDataSource(newData);
+  };
+
+  const onChange = (value) => {
+    if (value !== acRate * 0.01) {
+      setAcRate(value * 0.01);
+    }
+    console.log('changed', value);
+  };
 
   const handleAdd = () => {
     const latestData = dataSource[dataSource.length - 1];
@@ -211,16 +203,16 @@ const App = () => {
     const tpower = year * 1;
     const newData = {
       key: count,
-      electricitycost: latestData.electricitycost * eleRate.toFixed(2),
-      saleprice: latestData.saleprice * salesRate.toFixed(2),
-      profit: profit.toFixed(2),
-      acchargepower: latestData.acchargepower,
-      averageworkhour: latestData.averageworkhour* acRate.toFixed(2), // Assuming you want to keep the original averageworkhour
-      totalchargekwh: latestData.acchargepower * acRate * latestData.averageworkhour, // Update this line
-      year: year.toFixed(2),
-      tpower: tpower.toFixed(2),
+      electricitycost: parseFloat(parseFloat(latestData.electricitycost * eleRate).toFixed(2)),
+      saleprice: parseFloat(parseFloat(latestData.saleprice * salesRate).toFixed(2)),
+      profit: parseFloat(parseFloat(profit).toFixed(2)),
+      acchargepower: parseFloat(parseFloat(latestData.acchargepower).toFixed(2)),
+      averageworkhour: parseFloat(parseFloat(latestData.averageworkhour* acRate).toFixed(2)), // Assuming you want to keep the original averageworkhour
+      totalchargekwh: parseFloat(parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour).toFixed(2)), 
+      year: parseFloat(parseFloat(year).toFixed(2)),
+      tpower: parseFloat(parseFloat(tpower).toFixed(2)),
       ...keys.reduce((acc, key) => {
-        acc[key] = (userData["0"][key] * year).toFixed(2);
+        acc[key] = parseFloat(parseFloat(userData["0"][key] * year).toFixed(2));
         return acc;
       }, {}),
     };
@@ -249,6 +241,7 @@ const App = () => {
       cell: EditableCell,
     },
   };
+
   const columns = defaultColumns.map((col) => {
     if (!col.editable) {
       return col;
@@ -261,9 +254,27 @@ const App = () => {
         dataIndex: col.dataIndex,
         title: col.title,
         handleSave,
+        dispatch,
+        dataSource,
       }),
     };
   });
+  
+  // const columns = defaultColumns.map((col) => {
+  //   if (!col.editable) {
+  //     return col;
+  //   }
+  //   return {
+  //     ...col,
+  //     onCell: (record) => ({
+  //       record,
+  //       editable: col.editable,
+  //       dataIndex: col.dataIndex,
+  //       title: col.title,
+  //       handleSave,
+  //     }),
+  //   };
+  // });
 
   return (
     <div className='home-page'>
@@ -302,6 +313,12 @@ const App = () => {
         bordered
         dataSource={dataSource}
         columns={columns}
+      />
+      <LineChart
+        series={[
+          { curve: "linear", data: [0, 5, 2, 6, 3, 9.3] },
+          { curve: "linear", data: [6, 3, 7, 9.5, 4, 2] },
+          ]}
       />
     </div>
   );
