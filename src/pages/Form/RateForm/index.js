@@ -28,6 +28,7 @@ const EditableCell = ({
   const [editing, setEditing] = useState(false);
   const inputRef = useRef(null);
   const form = useContext(EditableContext);
+
   useEffect(() => {
     if (editing) {
       inputRef.current.focus();
@@ -40,6 +41,7 @@ const EditableCell = ({
       [dataIndex]: record[dataIndex],
     });
   };
+
   const save = async () => {
     try {
       const values = await form.validateFields();
@@ -85,7 +87,14 @@ const EditableCell = ({
 };
 
 const App = () => {
-  const userData = useSelector((state) => state.user);
+  const userData = useSelector((state) => state.user.userData);
+  const userInvestment = useSelector((state) => state.user.userInvestment);
+
+  console.log('**********')
+
+  console.log(userInvestment)
+  // const userData = useSelector((state) => state.user);
+
   const [modifiedFirstRow, setModifiedFirstRow] = useState(false)
   const [eleRate, setEleRate] = useState(1)
   const [salesRate, setSalesRate] = useState(1)
@@ -195,21 +204,31 @@ const App = () => {
   };
 
   function transformTableData(tableData) {
-    const result = Object.keys(tableData[0])
-      .filter((key) => key === 'profit' || key === 'totalchargekwh' )
+    const result = Object.keys(tableData[0]).slice(-keys.length)
       .map((key) => ({
         curve: key,
         data: tableData.map((item) => item[key]),
       }));
-  
-    return result;
+
+      const transformArray2 = (array1, array2) => {
+        return array1.map((item) => ({
+          curve: item.curve,
+          data: new Array(item.data.length).fill(array2[item.curve]),
+        }));
+      };
+
+      const resultArray2 = transformArray2(result, userInvestment)
+
+      // Join array1 and resultArray2 together
+      const finalArray = [...result, ...resultArray2];
+    return finalArray;
   }
 
   const handleAdd = () => {
     const latestData = dataSource[dataSource.length - 1];
-    const profit = latestData.saleprice - latestData.electricitycost;
-    const year = profit * latestData.totalchargekwh * 365;
-    const tpower = year * 1;
+    let profit = latestData.saleprice - latestData.electricitycost;
+    let year = latestData.totalchargekwh * profit *365;
+    let tpower = year * 1;
     const newData = {
       key: count,
       electricitycost: parseFloat(parseFloat(latestData.electricitycost * eleRate).toFixed(2)),
@@ -218,7 +237,7 @@ const App = () => {
       acchargepower: parseFloat(parseFloat(latestData.acchargepower).toFixed(2)),
       averageworkhour: parseFloat(parseFloat(latestData.averageworkhour* acRate).toFixed(2)), // Assuming you want to keep the original averageworkhour
       totalchargekwh: parseFloat(parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour).toFixed(2)), 
-      year: parseFloat(parseFloat(year).toFixed(2)),
+      year: parseInt(parseFloat(parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour).toFixed(2)) * parseFloat(parseFloat(profit).toFixed(2)) * 365),
       tpower: parseFloat(parseFloat(tpower).toFixed(2)),
       ...keys.reduce((acc, key) => {
         acc[key] = parseFloat(parseFloat(userData["0"][key] * year).toFixed(2));
@@ -303,6 +322,7 @@ const App = () => {
         </Space>
       </Flex>
       <Table
+        className='home-table'
         components={components}
         rowClassName={() => 'editable-row'}
         bordered
@@ -310,6 +330,7 @@ const App = () => {
         columns={columns}
       />
       <LineChart
+        className='home-graph'
         series={dataGraph}
       />
     </div>

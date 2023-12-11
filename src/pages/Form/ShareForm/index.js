@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Form, Input, Table, Select } from 'antd';
 import './index.css';
 import { useSelector, useDispatch } from 'react-redux'
-import { updateUser } from '../../../actions';
+import { updateUser, updateInvestment } from '../../../actions';
 
 const { Option } = Select;
 
@@ -64,7 +64,7 @@ const ShareForm = () => {
     arr.push(investmentMap)
     setDataSource(arr)
     dispatch(updateUser([sumMap]))
-    dispatch(updateUser([sumMap]))
+    dispatch(updateInvestment(investmentMap))
   } 
 
 
