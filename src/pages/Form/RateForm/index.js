@@ -169,6 +169,7 @@ const App = () => {
 
     return {
       ...originalData,
+      key: 1,
       profit: profit,
       totalchargekwh: totalchargekwh,
       year: year,
@@ -219,8 +220,19 @@ const App = () => {
 
       const resultArray2 = transformArray2(result, userInvestment)
 
-      // Join array1 and resultArray2 together
-      const finalArray = [...result, ...resultArray2];
+      const calculateCumulativeSums = (inputArray) => {
+        let cumulativeSum = 0;
+      
+        return inputArray.map((obj) => ({
+          curve: obj.curve,
+          data: obj.data.map((value) => (cumulativeSum += value)),
+        }));
+      };
+
+      console.log('-----first-----')
+
+      console.log(calculateCumulativeSums(result))
+      const finalArray = [...calculateCumulativeSums(result), ...resultArray2];
     return finalArray;
   }
 
@@ -240,7 +252,7 @@ const App = () => {
       year: parseInt(parseFloat(parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour).toFixed(2)) * parseFloat(parseFloat(profit).toFixed(2)) * 365),
       tpower: parseFloat(parseFloat(tpower).toFixed(2)),
       ...keys.reduce((acc, key) => {
-        acc[key] = parseFloat(parseFloat(userData["0"][key] * year).toFixed(2));
+        acc[key] = parseFloat(parseFloat(userData["0"][key] * parseInt(parseFloat(parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour).toFixed(2)) * parseFloat(parseFloat(profit).toFixed(2)) * 365)).toFixed(2));
         return acc;
       }, {}),
     };
