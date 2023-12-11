@@ -3,7 +3,6 @@ import { Button, Form, Input, Table, InputNumber, Space, Flex } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import './index.css';
 import userReducer, { initialState } from '../../../reducers/userReducer';
-// import { updateGraph } from '../../../actions';
 import { LineChart } from '@mui/x-charts/LineChart';
 
 const EditableContext = React.createContext(null);
@@ -24,17 +23,14 @@ const EditableCell = ({
   dataIndex,
   record,
   handleSave,
-  // dataSource,
   ...restProps
 }) => {
-  // const dispatch = useDispatch()
   const [editing, setEditing] = useState(false);
   const inputRef = useRef(null);
   const form = useContext(EditableContext);
   useEffect(() => {
     if (editing) {
       inputRef.current.focus();
-      // dispatch(updateGraph(dataSource));
     }
   }, [editing]);
 
@@ -152,6 +148,8 @@ const App = () => {
   }, {});
 
   const [dataSource, setDataSource] = useState([firstRowData]);
+  const [dataGraph, setDataGraph] = useState([]);
+
   const [count, setCount] = useState(2);
 
   const implementFirstRow = (originalData) => {
@@ -196,6 +194,17 @@ const App = () => {
     console.log('changed', value);
   };
 
+  function transformTableData(tableData) {
+    const result = Object.keys(tableData[0])
+      .filter((key) => key === 'profit' || key === 'totalchargekwh' )
+      .map((key) => ({
+        curve: key,
+        data: tableData.map((item) => item[key]),
+      }));
+  
+    return result;
+  }
+
   const handleAdd = () => {
     const latestData = dataSource[dataSource.length - 1];
     const profit = latestData.saleprice - latestData.electricitycost;
@@ -216,7 +225,9 @@ const App = () => {
         return acc;
       }, {}),
     };
-    setDataSource([...dataSource, newData]);
+
+    setDataSource([...dataSource, newData])
+    setDataGraph(transformTableData([...dataSource, newData]))
     setCount(count + 1);
   };
 
@@ -259,22 +270,6 @@ const App = () => {
       }),
     };
   });
-  
-  // const columns = defaultColumns.map((col) => {
-  //   if (!col.editable) {
-  //     return col;
-  //   }
-  //   return {
-  //     ...col,
-  //     onCell: (record) => ({
-  //       record,
-  //       editable: col.editable,
-  //       dataIndex: col.dataIndex,
-  //       title: col.title,
-  //       handleSave,
-  //     }),
-  //   };
-  // });
 
   return (
     <div className='home-page'>
@@ -315,10 +310,7 @@ const App = () => {
         columns={columns}
       />
       <LineChart
-        series={[
-          { curve: "linear", data: [0, 5, 2, 6, 3, 9.3] },
-          { curve: "linear", data: [6, 3, 7, 9.5, 4, 2] },
-          ]}
+        series={dataGraph}
       />
     </div>
   );
