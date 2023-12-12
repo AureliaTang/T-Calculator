@@ -2,6 +2,7 @@
   height: 100vh; 
   display: flex;
   flex-direction: column;
+  margin: 150px 50px;
   .home-table {
     margin-top: 10px;
   }

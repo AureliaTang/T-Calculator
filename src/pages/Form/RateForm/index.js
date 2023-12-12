@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Button, Form, Input, Table, InputNumber, Space, Flex } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import './index.css';
-import userReducer, { initialState } from '../../../reducers/userReducer';
 import { LineChart } from '@mui/x-charts/LineChart';
 
 const EditableContext = React.createContext(null);
@@ -89,17 +88,13 @@ const EditableCell = ({
 const App = () => {
   const userData = useSelector((state) => state.user.userData);
   const userInvestment = useSelector((state) => state.user.userInvestment);
-
-  console.log('**********')
-
-  console.log(userInvestment)
-  // const userData = useSelector((state) => state.user);
-
   const [modifiedFirstRow, setModifiedFirstRow] = useState(false)
   const [eleRate, setEleRate] = useState(1)
   const [salesRate, setSalesRate] = useState(1)
   const [acRate, setAcRate] = useState(1)
   const [hourRate, setHourRate] = useState(1)
+  const [xData, setXData] = useState([])
+
   const dispatch = useDispatch();  // Define dispatch here
 
 
@@ -160,6 +155,14 @@ const App = () => {
   const [dataGraph, setDataGraph] = useState([]);
 
   const [count, setCount] = useState(2);
+
+  const generateArray = (n) => {
+    const resultArray = [];
+    for (let i = 1; i <= n; i++) {
+      resultArray.push(i);
+    }
+    return resultArray;
+  };
 
   const implementFirstRow = (originalData) => {
     const formatOriginalData = (data) => {
@@ -223,16 +226,10 @@ const App = () => {
       }
   }
 
-  const handleDelete = (key) => {
-    const newData = dataSource.filter((item) => item.key !== key);
-    setDataSource(newData);
-  };
-
   const onChange = (value) => {
     if (value !== acRate * 0.01) {
       setAcRate(value * 0.01);
     }
-    console.log('changed', value);
   };
 
   function transformTableData(tableData) {
@@ -244,21 +241,21 @@ const App = () => {
 
       const transformArray2 = (array1, array2) => {
         return array1.map((item) => ({
-          curve: item.curve,
+          label: item.curve,
           data: new Array(item.data.length).fill(parseFloat(array2[item.curve])),
         }));
       };
 
       const resultArray2 = transformArray2(result, userInvestment)
 
-      const calculateCumulativeSums = (inputArray) => {
-        let cumulativeSum = 0;
-      
-        return inputArray.map((obj) => ({
-          curve: obj.curve,
-          data: obj.data.map((value) => (cumulativeSum += value)),
+      const calculateCumulativeSums = (originalArray) => {
+        return originalArray.map((item) => ({
+          label: item.curve + ' ROI',
+          data: item.data.map((value, index, array) => array.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0)),
         }));
       };
+
+
       const finalArray = [...calculateCumulativeSums(result), ...resultArray2];
     return finalArray;
   }
@@ -286,11 +283,14 @@ const App = () => {
 
     setDataSource([...dataSource, newData])
     setDataGraph(transformTableData([...dataSource, newData]))
+    setXData(generateArray([...dataSource, newData].length))
     setCount(count + 1);
   };
 
   const handleDel = () => {
     setDataSource([...dataSource].slice(0,dataSource.length-1));
+    setDataGraph(transformTableData([...dataSource].slice(0,dataSource.length-1)));
+    setXData(generateArray(dataSource.length-1))
     setCount(count - 1);
   }
 
@@ -334,6 +334,7 @@ const App = () => {
       <Flex justify="space-between" align="center">
         <Button
           onClick={handleAdd}
+          disabled={dataSource[0].year === 0}
           type="primary"
           style={{}}
         >
@@ -343,17 +344,13 @@ const App = () => {
           onClick={handleDel}
           disabled={dataSource.length<=1}
           type="primary"
-          style={{
-            // marginBottom: 16,
-            // marginRight: 12
-          }}
         >
           Delete a row
         </Button>
         <Space>
           average work hour ratio
           <InputNumber
-            defaultValue={100}
+            defaultValue={110}
             formatter={(value) => `${value}%`}
             parser={(value) => value.replace('%', '')}
             onChange={onChange}
@@ -370,6 +367,7 @@ const App = () => {
       />
       <LineChart
         className='home-graph'
+        xAxis={[{ data: xData, scaleType: 'point' }]}
         series={dataGraph}
       />
     </div>
