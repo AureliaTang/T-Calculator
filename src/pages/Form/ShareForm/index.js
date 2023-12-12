@@ -52,11 +52,11 @@ const ShareForm = () => {
 
     for (let [key, value] of shareMap) {
       if(sumMap.hasOwnProperty(key)) {
-        sumMap[key] = parseFloat(parseFloat(sumMap[key]).toFixed(2)) +  parseFloat(parseFloat(value /denominator).toFixed(2))
-        investmentMap[key] = parseFloat(parseFloat(investmentMap[key]).toFixed(2)) + parseFloat(parseFloat(value).toFixed(2))
+        sumMap[key] = parseFloat(parseFloat(sumMap[key]) + parseFloat(value /denominator)).toFixed(2)
+        investmentMap[key] = parseFloat(parseFloat(investmentMap[key])+parseFloat(value)).toFixed(2)
       } else{
-        sumMap[key] = parseFloat(parseFloat(value / denominator).toFixed(2))
-        investmentMap[key] = parseFloat(parseFloat(value).toFixed(2))
+        sumMap[key] = parseFloat(value / denominator).toFixed(2)
+        investmentMap[key] = parseFloat(value).toFixed(2)
       }
     }
 

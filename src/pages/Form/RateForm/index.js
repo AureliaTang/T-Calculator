@@ -162,23 +162,54 @@ const App = () => {
   const [count, setCount] = useState(2);
 
   const implementFirstRow = (originalData) => {
-    const profit = originalData.saleprice - originalData.electricitycost;
-    const totalchargekwh = (originalData.acchargepower) * (originalData.averageworkhour);
-    const year = profit * totalchargekwh * 365;
-    const userDataKeys = keys
-
-    return {
-      ...originalData,
-      key: 1,
-      profit: profit,
-      totalchargekwh: totalchargekwh,
-      year: year,
-      ...userDataKeys.reduce((acc, key) => {
-        acc[key] = (userData["0"][key] * year);
-        return acc;
-      }, {}),
+    const formatOriginalData = (data) => {
+      const formattedData = {};
+      for (const key in data) {
+        formattedData[key] = parseFloat(data[key]).toFixed(2);
+      }
+      return formattedData;
     };
-  }
+  
+    const formattedOriginalData = formatOriginalData(originalData);
+  
+    const profit = formattedOriginalData.saleprice - formattedOriginalData.electricitycost;
+    const totalchargekwh = formattedOriginalData.acchargepower * formattedOriginalData.averageworkhour;
+    const year = profit * totalchargekwh * 365;
+    const userDataKeys = keys;
+  
+    const formatDecimal = (value) => parseFloat(value).toFixed(2);
+
+    const shareArr = userDataKeys.reduce((acc, key) => {
+      acc[key] = formatDecimal(userData["0"][key] * year);
+      return acc;
+    }, {})
+
+    const sumAllValues = (obj) => {
+      let totalSum = 0;
+    
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const value = parseFloat(obj[key]);
+          if (!isNaN(value)) {
+            totalSum += value;
+          }
+        }
+      }
+    
+      return totalSum.toFixed(2);
+    };
+    
+  
+    return {
+      ...formattedOriginalData,
+      key: 1,
+      profit: formatDecimal(profit),
+      totalchargekwh: formatDecimal(totalchargekwh),
+      year: Object.keys(shareArr).length > 1 ? sumAllValues(shareArr) : year,
+      ...shareArr
+    };
+  };
+  
 
   if(dataSource.length === 1 && !modifiedFirstRow) {
     const isComplete = dataSource[0].saleprice !==0 
@@ -208,13 +239,13 @@ const App = () => {
     const result = Object.keys(tableData[0]).slice(-keys.length)
       .map((key) => ({
         curve: key,
-        data: tableData.map((item) => item[key]),
+        data: tableData.map((item) => parseFloat(item[key])),
       }));
 
       const transformArray2 = (array1, array2) => {
         return array1.map((item) => ({
           curve: item.curve,
-          data: new Array(item.data.length).fill(array2[item.curve]),
+          data: new Array(item.data.length).fill(parseFloat(array2[item.curve])),
         }));
       };
 
@@ -228,10 +259,6 @@ const App = () => {
           data: obj.data.map((value) => (cumulativeSum += value)),
         }));
       };
-
-      console.log('-----first-----')
-
-      console.log(calculateCumulativeSums(result))
       const finalArray = [...calculateCumulativeSums(result), ...resultArray2];
     return finalArray;
   }
@@ -243,16 +270,16 @@ const App = () => {
     let tpower = year * 1;
     const newData = {
       key: count,
-      electricitycost: parseFloat(parseFloat(latestData.electricitycost * eleRate).toFixed(2)),
-      saleprice: parseFloat(parseFloat(latestData.saleprice * salesRate).toFixed(2)),
-      profit: parseFloat(parseFloat(profit).toFixed(2)),
-      acchargepower: parseFloat(parseFloat(latestData.acchargepower).toFixed(2)),
-      averageworkhour: parseFloat(parseFloat(latestData.averageworkhour* acRate).toFixed(2)), // Assuming you want to keep the original averageworkhour
-      totalchargekwh: parseFloat(parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour).toFixed(2)), 
-      year: parseInt(parseFloat(parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour).toFixed(2)) * parseFloat(parseFloat(profit).toFixed(2)) * 365),
-      tpower: parseFloat(parseFloat(tpower).toFixed(2)),
+      electricitycost: parseFloat(latestData.electricitycost * eleRate).toFixed(2),
+      saleprice: parseFloat(latestData.saleprice * salesRate).toFixed(2),
+      profit: parseFloat(profit).toFixed(2),
+      acchargepower: parseFloat(latestData.acchargepower).toFixed(2),
+      averageworkhour: parseFloat(latestData.averageworkhour* acRate).toFixed(2), // Assuming you want to keep the original averageworkhour
+      totalchargekwh: parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour).toFixed(2), 
+      year: parseFloat((latestData.acchargepower * acRate) * (latestData.averageworkhour) * profit * 365).toFixed(2),
+      tpower: parseFloat(tpower).toFixed(2),
       ...keys.reduce((acc, key) => {
-        acc[key] = parseFloat(parseFloat(userData["0"][key] * parseInt(parseFloat(parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour).toFixed(2)) * parseFloat(parseFloat(profit).toFixed(2)) * 365)).toFixed(2));
+        acc[key] = parseFloat(parseFloat(userData["0"][key]) * parseFloat(latestData.acchargepower * acRate * latestData.averageworkhour)* parseFloat(profit) * 365).toFixed(2);
         return acc;
       }, {}),
     };
