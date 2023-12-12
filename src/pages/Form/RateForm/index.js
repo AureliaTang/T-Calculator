@@ -91,7 +91,7 @@ const App = () => {
   const [modifiedFirstRow, setModifiedFirstRow] = useState(false)
   const [eleRate, setEleRate] = useState(1)
   const [salesRate, setSalesRate] = useState(1)
-  const [acRate, setAcRate] = useState(1)
+  const [acRate, setAcRate] = useState(1.1)
   const [hourRate, setHourRate] = useState(1)
   const [xData, setXData] = useState([])
 
@@ -208,7 +208,7 @@ const App = () => {
       key: 1,
       profit: formatDecimal(profit),
       totalchargekwh: formatDecimal(totalchargekwh),
-      year: Object.keys(shareArr).length > 1 ? sumAllValues(shareArr) : year,
+      year: Object.keys(shareArr).length > 1 ? sumAllValues(shareArr) : parseFloat(year).toFixed(2),
       ...shareArr
     };
   };
@@ -365,11 +365,13 @@ const App = () => {
         dataSource={dataSource}
         columns={columns}
       />
-      <LineChart
+      { 
+        (userData.length >= 1&& dataSource[0].year !== 0) && <LineChart
         className='home-graph'
         xAxis={[{ data: xData, scaleType: 'point' }]}
         series={dataGraph}
       />
+      }
     </div>
   );
 };
