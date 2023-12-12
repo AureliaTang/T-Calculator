@@ -158,7 +158,7 @@ const App = () => {
 
   const generateArray = (n) => {
     const resultArray = [];
-    for (let i = 1; i <= n; i++) {
+    for (let i = 0; i <= n; i++) {
       resultArray.push(i);
     }
     return resultArray;
@@ -242,16 +242,17 @@ const App = () => {
       const transformArray2 = (array1, array2) => {
         return array1.map((item) => ({
           label: item.curve,
-          data: new Array(item.data.length).fill(parseFloat(array2[item.curve])),
+          data: new Array(item.data.length+1).fill(parseFloat(array2[item.curve])),
         }));
       };
 
       const resultArray2 = transformArray2(result, userInvestment)
 
       const calculateCumulativeSums = (originalArray) => {
+        console.log('originalArray', originalArray)
         return originalArray.map((item) => ({
           label: item.curve + ' ROI',
-          data: item.data.map((value, index, array) => array.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0)),
+          data: [0].concat(item.data).map((value, index, array) => array.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0)),
         }));
       };
 
