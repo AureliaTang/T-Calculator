@@ -3,6 +3,7 @@ import { Button, Form, Input, Table, InputNumber, Space, Flex } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import './index.css';
 import { LineChart } from '@mui/x-charts/LineChart';
+import { Grid } from '@mui/material';
 
 const EditableContext = React.createContext(null);
 const EditableRow = ({ index, ...props }) => {
@@ -248,8 +249,9 @@ const App = () => {
 
       const resultArray2 = transformArray2(result, userInvestment)
 
+      console.log('resultArray2---->', resultArray2)
+
       const calculateCumulativeSums = (originalArray) => {
-        console.log('originalArray', originalArray)
         return originalArray.map((item) => ({
           label: item.curve + ' ROI',
           data: [0].concat(item.data).map((value, index, array) => array.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0)),
@@ -257,8 +259,32 @@ const App = () => {
       };
 
 
-      const finalArray = [...calculateCumulativeSums(result), ...resultArray2];
-    return finalArray;
+      console.log('calculateCumulativeSums---->', calculateCumulativeSums(result))
+
+      function mergeArrays(arr1, arr2) {
+        // Create an array to store the merged results
+        const mergedArray = [];
+      
+        // Iterate over each pair of objects in the input arrays
+        for (let i = 0; i < arr1.length; i++) {
+          // Create a new array with the merged objects
+          const mergedObjects = [arr1[i], arr2[i]];
+      
+          // Push the merged array to the result
+          mergedArray.push(mergedObjects);
+        }
+      
+        return mergedArray;
+      }
+      
+      // Example usage with ARR1 and ARR2
+      const resultArray = mergeArrays(resultArray2, calculateCumulativeSums(result));
+      
+      // Log the result
+      console.log(resultArray);
+    
+      // const finalArray = [...calculateCumulativeSums(result), ...resultArray2];
+    return resultArray;
   }
 
   const handleAdd = () => {
@@ -358,6 +384,7 @@ const App = () => {
           />
         </Space>
       </Flex>
+
       <Table
         className='home-table'
         components={components}
@@ -366,13 +393,20 @@ const App = () => {
         dataSource={dataSource}
         columns={columns}
       />
-      { 
-        (userData.length >= 1&& dataSource[0].year !== 0) && <LineChart
-        className='home-graph'
-        xAxis={[{ data: xData, scaleType: 'point' }]}
-        series={dataGraph}
-      />
-      }
+      
+      <Grid container spacing={2} className="graph-collection">
+        {userData.length >= 1 && dataSource[0].year !== 0 && dataGraph.map((graph, index) => (
+          <Grid key={index} item xs={6} md={6} lg={6}>
+            <div style={{ height: '300px' }}>
+              <LineChart
+                className='item'
+                xAxis={[{ data: xData, scaleType: 'point' }]}
+                series={graph}
+              />
+            </div>
+          </Grid>
+        ))}
+      </Grid>
     </div>
   );
 };
