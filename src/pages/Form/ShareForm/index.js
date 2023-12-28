@@ -74,19 +74,20 @@ const ShareForm = () => {
   };
 
   return (
-  <div className="page">
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+  }}>
     <div>
       <Form
         name="basic"
         labelCol={{
-          span: 14,
+          span:6,
         }}
-        wrapperCol={{
-          span: 50,
-        }}
-        style={{
-          width: 900,
-        }}
+        labelAlign='left'
         initialValues={{
           remember: true,
         }}
@@ -249,7 +250,7 @@ const ShareForm = () => {
         </Form.Item>
         <Form.Item
           wrapperCol={{
-            offset: 16,
+            offset: 10,
             span: 16,
           }}
         >
